@@ -3,6 +3,13 @@
 return array(
 	'server' => array
 	(
+		// if deployed in a different machine put server ip or name
+		// otherwise localhost or 127.0.0.1
+		'server_name' => '127.0.0.1',
+
+		// leave as is
+		'server_script' => '/server/start-server.php',
+		
 		// leave as is
 		'address' => '0.0.0.0',
 

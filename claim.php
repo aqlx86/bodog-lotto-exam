@@ -1,6 +1,10 @@
 <?php
 
-	$socket_server = $_SERVER['SERVER_NAME'].':9000/server/start-server.php';
+	$config = include 'server/config.php';
+
+	$config = $config['server'];
+
+	$socket_server = $config['server_name'].':'.$config['port'].$config['server_script'];
 
 ?>
 <!DOCTYPE html>

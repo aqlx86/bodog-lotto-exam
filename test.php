@@ -1,5 +1,13 @@
 <?php
 
+$a = array(1,2,3,10,5,7);
+$b = array(1,2,3,4,5,6);
+
+print_r(array_intersect($a, $b));
+
+die;
+
+
 $start = '07:00:00';
 $end = '20:00:00';
 

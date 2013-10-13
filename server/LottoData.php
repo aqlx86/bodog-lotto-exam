@@ -25,12 +25,16 @@ class LottoData {
 		// get db config
 		$config = $this->config['database'];
 
-		$this->orm = new NotORM( new PDO("mysql:dbname=$config[name]", $config['user'], $config['password']) );
+		$structure = new NotORM_Structure_Convention(
+			'id', "%s_id", "%ss"
+		);
+
+		$this->orm = new NotORM( new PDO("mysql:dbname=$config[name]", $config['user'], $config['password']), $structure );
 	}
 
 	public function status()
 	{
-		$status = array('status' => 1);
+		$status = array('status' => 0);
 
 		// get game config
 		$config = $this->config['game'];
@@ -42,14 +46,22 @@ class LottoData {
 		{
 			$status = array(
 				'status' => -1,
-				'combinations' => $drawn['combinations']
+				'combinations' => $drawn['combinations'],
+				'message' => 'winning combinations has been selected. go to claim page now?'
 			);
+
+			return $status;
 		}
 
 		// check if still in game period.
 		if(date('H:i:s') >= $config['start'] AND date('H:i:s') <= $config['end'])
 		{
-			$status = 0;
+			$status['status'] = 1;
+		}
+		else
+		{
+			$status['message'] = 'past cutoff period, not accepting bets anymore today. game will start again '. $config['start'].
+				' go to claim page now?';
 		}
 
 		return $status;
@@ -64,6 +76,7 @@ class LottoData {
 		
 		$date = is_null($date) ? date('Y-m-d') : $date;
 
+		// bets in date.
 		$combinations = $this->orm->bets()->where('DATE(bet_date) = ?', $date);
 
 		$numbers = array();
@@ -79,18 +92,47 @@ class LottoData {
 		// shuffle numbers
 		shuffle($numbers);
 
-		// select six numbers
+		// select six randome numbers, this will return the array keys so we need to intersect this with the original array 
+		// to get the values
 		$indexes = array_rand($numbers, 6);
 
 		$numbers = implode(',', array_intersect_key($numbers, $indexes));
 
 		// save winning combinations
-		$this->orm->draws->insert(array(
+		$draw =  $this->orm->draws->insert(array(
 			'combinations' => $numbers,
 			'draw_date' => $date
 		));	
 
-		return $numbers;
+		$results = array();
+
+		// get all the winning bets
+		foreach($combinations as $value)
+		{
+			// matche the combinations
+			$matched = array_intersect(explode(',', $value['combinations']), explode(',', $numbers));
+
+			// at least 3 numbers matched the winning combinations is a winner
+			if(count($matched) >= 3)
+			{	
+				$this->orm->winners->insert(array(
+					'draw_id' => $draw['id'],
+					'bet_id' => $value['id'],
+				));
+			}
+
+			$results[] = array(
+				'matched' => implode(',', $matched),
+				'combination' => $value['combinations'],
+				'winner' => (count($matched) >= 3) ? true : false
+			);
+		}
+
+		return array(
+			'combination' => $numbers,
+			'draw_date' => $date,
+			'results' => $results
+		);
 	}
 
 	public function bet($combinations)
@@ -115,37 +157,74 @@ class LottoData {
 
 	public function claim($code)
 	{
-		// check if claimed.
-		if($this->orm->claims()->where('code = ?', $code)->fetch())
-		{
-			return array('message' => 'You already claimed this.');
-		}
-
-		$message = array();
+		$response = array(
+			'status' => 1,
+		);
 
 		// check if in bet
 		$bet = $this->orm->bets()->where('code = ?', $code)->fetch();
 
 		if(! $bet)
 		{
-			return array('message' => 'Code not found.');
+			$response['message'] = 'Code not found.';
+
+			return $response;
+		}
+
+		$draw_date = date('Y-m-d', strtotime($bet['bet_date']));
+
+		$response['combinations'] = $bet['combinations'];
+		$response['bet_date'] = $draw_date;
+
+		// get draw details
+		$draw = $this->orm->draws()->where('draw_date = ?', $draw_date)->fetch();
+
+		if(! $draw)
+		{
+			$response['message'] = 'no winning combination draw yet for '. $draw_date;
+
+			return $response;
+		}
+
+		$response['winning_combination'] = $draw['combinations'];
+
+		// get all winning combinations
+		$winners = $this->orm->winners()->where('draw_id = ?', $draw['id']);
+
+		foreach($winners as $values)
+		{
+			$response['winners'][] = $values->bet['combinations'];
 		}
 
 		// check if winner
-		$winner = $this->orm->draws()->where('combinations = ?', $bet['combinations'])->fetch();
+		$winner = $this->orm->winners()->where('bet_id = ?', $bet['id'])->fetch();
 
 		if(! $winner)
 		{
-			return array('message' => 'Not a winning combination.');
+			$response['status'] = -1;
+			$response['message'] = 'Not a winning combination.';
+
+			return $response;
 		}
 
-		// claim
-		$this->orm->claims->insert(array(
-			'code' => $code,
-			'date_claimed' => date('Y-m-d')
-		));
+		if($winner['claimed'] == 1)
+		{
+			$response['message'] = 'Already claimed on '. $winner['date_claimed'];
 
-		return array('message' => 'Congratulations.');
+			return $response;
+		}
+
+		// mark as claimed
+		$winner['claimed'] = 1;
+		$winner['date_claimed'] = date('Y-m-d');
+
+		// update
+		$winner->update();
+
+		$response['status'] = 0;
+		$response['message'] = 'Congratulations.';
+
+		return $response;
 	}
 
 	public function settings()

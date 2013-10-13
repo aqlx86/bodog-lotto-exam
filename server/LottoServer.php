@@ -55,7 +55,7 @@ class LottoServer extends WebSocketServer {
 		}
 
 		// attach command
-		$reply = array('command' => $command) + $reply;
+		$reply = array('command' => $command) + (array) $reply;
 
 		$this->send($user, json_encode($reply));
 	}

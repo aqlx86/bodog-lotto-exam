@@ -37,3 +37,29 @@
     font-size: 12px;
     font-weight: bold;
 }
+
+#results {
+    display: none;
+    font-weight: bold;
+}
+
+#results span, li
+{
+    font-weight: normal;
+    font-style: italic;
+}
+
+#results div {
+    background: #eee;
+    margin: 5px;
+    padding: 3px;
+}
+
+#status {
+    background: url('../images/disconnected.png') no-repeat center left;
+    padding-left: 20px;
+}
+
+.connected {
+    background: url('../images/connected.png') no-repeat center left !important;
+}

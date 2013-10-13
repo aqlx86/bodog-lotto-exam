@@ -5,19 +5,27 @@ $(document).ready(function(){
 
 	ws.onopen = function(){
 		$('#status').text('Connected to lotto server.');
+		$('#status').addClass('connected');
 		$('#settings').css('display', 'block');
 		ws.send('settings');
 	};
 
 	ws.onclose = function(){
 		$('#status').text('Connection closed.');
+		$('#status').removeClass('connected');
 	};
 
 	ws.onmessage = function(evt){
 		data = $.parseJSON(evt.data);
 
 		if(data.status < 1){
-			document.location.href = 'claim.php';
+			$('.numbers-selection').css('display', 'none');
+
+			var p = confirm(data.message)
+			if(p){
+				document.location.href = 'claim.php';	
+			}
+			
 			return;
 		}
 

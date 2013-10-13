@@ -17,7 +17,7 @@
 	</script>
 </head>
 <body>
-	<div class="container">
+	<div class="container numbers-selection">
 		<div id="numbers">
 			<?php foreach(range(1,42) as $number) : ?>
 				<div data-number='<?php echo $number; ?>' class="number"><?php echo $number; ?></div>
@@ -35,7 +35,9 @@
 			Game period will starts at <span id='settings-start'>..</span> and will end <span id='settings-end'>..</span>
 			and drawing of winning combination at <span id='settings-draw'>..</span>
 			<br /><br />
-			<input id='draw' type="button" value="click here to manually trigger drawing of numbers." />
+			<input id='draw' type="button" value="click here to manually trigger drawing of numbers." /> 
+
+			<a href="claim.php">go to claim page.</a>
 		</div>
 	</div>
 

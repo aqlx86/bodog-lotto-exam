@@ -18,7 +18,7 @@
 </head>
 <body>
 	<div class="container">
-		<h2>Winning Combination: <span id='combination'></span></h2>
+		
 
 		<label for="code">Code: </label>
 		<input id='code' type="text" />
@@ -28,11 +28,25 @@
 
 	<div class="container">
 		Status: <span id='status'>Connecting to lotto server...</span> 
-		
-		<div id="settings">
-			Game period will starts at <span id='settings-start'>..</span> and will end <span id='settings-end'>..</span>
-			and drawing of winning combination at <span id='settings-draw'>..</span>
-		</div>
 	</div>
+
+	<div class="container">
+		<div id="results">
+			<div>
+				Draw Date: <span class='draw_date'></span>
+				Winning Combination: <span class='winning_combination'></span>
+			</div>
+
+			<div>
+				Your combination <span id='combinations'> 
+			</div>
+
+			<div>
+				Other combinations with 3 or more numbers matched: 
+				<ul id="winners"></ul>
+			</div>
+		</span>
+	</div>
+	
 </body>
 </html>

@@ -3,9 +3,6 @@
 return array(
 	'server' => array
 	(
-		// if using a vhost use your vhost server name else use localhost or 127.0.0.1.
-		'host' => '127.0.0.1',
-
 		// leave as is
 		'address' => '0.0.0.0',
 
